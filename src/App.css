@@ -157,3 +157,19 @@ main {
     grid-template-columns: 1fr;
   }
 }
+.nav-menu {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+}
+
+.nav-menu a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.nav-menu a:hover {
+  text-decoration: underline;
+}

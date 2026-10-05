@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
-import ProductCard from "./components/ProductCard";
+
 import Header from "./components/Header";
-import CartItem from "./components/CartItem";
+import HomePage from "./pages/HomePage";
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailsPage from "./pages/ProductDetailsPage";
+import CartPage from "./pages/CartPage";
 
 function App() {
   const products = [
@@ -51,62 +55,71 @@ function App() {
     },
   ];
 
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   const addToCart = (product) => {
-    setCart([...cart, product]);
+    setCart((currentCart) => [...currentCart, product]);
   };
 
   const removeFromCart = (id) => {
-    setCart(cart.filter((item) => item.id !== id));
+    setCart((currentCart) => {
+      const index = currentCart.findIndex((item) => item.id === id);
+
+      if (index === -1) {
+        return currentCart;
+      }
+
+      return currentCart.filter((item, itemIndex) => itemIndex !== index);
+    });
   };
 
-  const cartTotal = cart.reduce((total, item) => {
-    return total + item.price;
-  }, 0);
-
   return (
-    <>
+    <BrowserRouter>
       <Header cartCount={cart.length} />
 
       <main>
-        <section className="products-section">
-          <h2>Our Products</h2>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
 
-          <div className="products">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
+          <Route
+            path="/products"
+            element={
+              <ProductsPage
+                products={products}
+                addToCart={addToCart}
               />
-            ))}
-          </div>
-        </section>
+            }
+          />
 
-        <section className="shopping-cart">
-          <h2>Shopping Cart</h2>
+          <Route
+            path="/products/:id"
+            element={
+              <ProductDetailsPage
+                products={products}
+                addToCart={addToCart}
+              />
+            }
+          />
 
-          {cart.length === 0 ? (
-            <p className="empty-cart">Your cart is empty.</p>
-          ) : (
-            <>
-              {cart.map((item, index) => (
-                <CartItem
-                  key={`${item.id}-${index}`}
-                  item={item}
-                  onRemove={removeFromCart}
-                />
-              ))}
-
-              <h3 className="cart-total">
-                Total: ${cartTotal.toFixed(2)}
-              </h3>
-            </>
-          )}
-        </section>
+          <Route
+            path="/cart"
+            element={
+              <CartPage
+                cart={cart}
+                removeFromCart={removeFromCart}
+              />
+            }
+          />
+        </Routes>
       </main>
-    </>
+    </BrowserRouter>
   );
 }
 
